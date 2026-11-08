@@ -261,7 +261,7 @@
 
 <!-- ACT I · legit: Pwn2Own (opens the industry) -->
 <section>
-  <h2>Hacking is a sport</h2>
+  <h2>Hacking as a sport</h2>
   <img class="shot" src="assets/image/src-pwn2own.png" alt="Pwn2Own Vancouver 2024 Master of Pwn leaderboard: Manfred Paul first with 202,500 dollars; Korean researchers Seunghyun Lee of KAIST and Theori high on the board" style="max-height:548px;width:auto;margin:.1em auto 0">
   <p class="src">Pwn2Own Vancouver 2024, Zero Day Initiative.</p>
 </section>
@@ -305,14 +305,18 @@
 <section>
   <h2>What about Korea?</h2>
   <div style="display:flex; gap:1.4em; align-items:flex-start; justify-content:center; margin-top:.2em">
-    <div style="text-align:center">
-      <img class="shot" src="assets/image/src-defkor.png" alt="DEF CON CTF 2018 final scoreboard: the Korean team DEFKOR00T placed first with 940 points, ahead of PPP, HITCON and 21 others" style="max-height:340px;width:auto;margin:0 auto">
+    <div style="text-align:center;flex:1 1 0;min-width:0">
+      <img class="shot" src="assets/image/src-defkor.png" alt="DEF CON CTF 2018 final scoreboard: the Korean team DEFKOR00T placed first with 940 points, ahead of PPP, HITCON and 21 others" style="max-height:330px;max-width:100%;width:auto;margin:0 auto">
     </div>
-    <div style="text-align:center">
-      <img class="shot" src="assets/image/src-5163.png" alt="Leaked Certificate of Acceptance showing the 5163 Army Division in Seoul taking delivery of Hacking Team's RCS spyware via Nanatech, stamped by the Government of the Republic of Korea" style="max-height:340px;width:auto;margin:0 auto">
+    <div style="text-align:center;flex:1 1 0;min-width:0">
+      <img class="shot" src="assets/image/src-5163.png" alt="Leaked Certificate of Acceptance showing the 5163 Army Division in Seoul taking delivery of Hacking Team's RCS spyware via Nanatech, stamped by the Government of the Republic of Korea" style="max-height:330px;max-width:100%;width:auto;margin:0 auto">
+    </div>
+    <div style="text-align:center;flex:1 1 0;min-width:0">
+      <img class="shot" src="assets/image/src-aptdown.png" alt="39C3 talk 'APT Down and the mystery of the burning data centers' by Christopher Kunz and Sylvester, showing the leaked APT workstation desktop with mofa.go.kr.7z and Ivanti exploits" style="max-height:330px;max-width:100%;width:auto;margin:0 auto">
     </div>
   </div>
   <p class="small" style="text-align:center;margin:.35em 0 0">Legal, and world-class: <b>Theori · STEALIEN · SK Shieldus · ENKI</b></p>
+  <p class="src">"APT Down", Phrack #72, Aug 2025 · Kunz &amp; Sylvester, 39C3, Dec 2025.</p>
 </section>
 
 <!-- 4. ACT I DIVIDER -->
@@ -593,8 +597,8 @@
 
 <!-- 17. ACT III DIVIDER with article screenshot -->
 <section class="divider" data-background-color="#121217">
-  <p class="num-k">· ATTEMPT #2: GIVE IT A MAP ·</p><div class="rule"></div>
-  <h2>Exploit dev = graph search</h2></section>
+  <p class="num-k">· EXPLOIT DEV = GRAPH SEARCH ·</p><div class="rule"></div>
+  <h2>Attempt #2: Give it a map!</h2></section>
 
 <!-- 18. nodes/hops model -->
 <section>
@@ -692,25 +696,24 @@
   <h2>2026: defenses force data-only</h2>
   <p class="small sub" style="margin:.1em 0 .4em">Every defense on. The obvious routes are walled off. An agent reroutes without running any code at all.</p>
   <div>
-    <svg viewBox="0 0 960 250" role="img" aria-label="QuickJS 2026: a use-after-free leads to a leak and arbitrary read/write, but overwriting the GOT, ROP and spawning a shell are all blocked by mitigations, so an agent reroutes to a data-only path to achieve the effect" style="width:100%;height:auto;display:block;max-height:36vh" font-family="Fira Code,monospace" font-size="15">
+    <svg viewBox="0 0 960 205" role="img" aria-label="QuickJS 2026: a use-after-free leads to a leak and arbitrary read/write, but overwriting the GOT, ROP and spawning a shell are all blocked by mitigations, so an agent reroutes to a data-only path to achieve the effect" style="width:100%;height:auto;display:block;max-height:36vh" font-family="Fira Code,monospace" font-size="15">
       <defs><marker id="m3-t" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#157f78"/></marker></defs>
       <g><rect x="14" y="98" width="150" height="46" rx="9" fill="#fff" stroke="#2558d6" stroke-width="2"/><text x="30" y="120" fill="#121217">use-after-free</text><text x="30" y="136" fill="#8a90a0" font-size="12">found by an agent</text></g>
       <g><rect x="196" y="98" width="130" height="46" rx="9" fill="#fff" stroke="#8a90a0" stroke-width="1.8"/><text x="214" y="126" fill="#121217">info leak</text></g>
       <g><rect x="358" y="98" width="150" height="46" rx="9" fill="#fff" stroke="#8a90a0" stroke-width="1.8"/><text x="376" y="126" fill="#121217">arbitrary r/w</text></g>
       <g opacity="0.5" font-size="13" fill="#121217">
-        <rect x="560" y="8" width="178" height="34" rx="7" fill="#fff" stroke="#E1323C" stroke-width="1.6"/><text x="576" y="30">overwrite GOT</text>
-        <rect x="560" y="50" width="178" height="34" rx="7" fill="#fff" stroke="#E1323C" stroke-width="1.6"/><text x="576" y="72">reuse code (ROP)</text>
-        <rect x="560" y="92" width="178" height="34" rx="7" fill="#fff" stroke="#E1323C" stroke-width="1.6"/><text x="576" y="114">spawn a shell</text>
+        <rect x="610" y="8" width="178" height="34" rx="7" fill="#fff" stroke="#E1323C" stroke-width="1.6"/><text x="626" y="30">overwrite GOT</text>
+        <rect x="610" y="50" width="178" height="34" rx="7" fill="#fff" stroke="#E1323C" stroke-width="1.6"/><text x="626" y="72">reuse code (ROP)</text>
+        <rect x="610" y="92" width="178" height="34" rx="7" fill="#fff" stroke="#E1323C" stroke-width="1.6"/><text x="626" y="114">spawn a shell</text>
       </g>
-      <g stroke="#E1323C" stroke-width="2.6"><line x1="520" y1="18" x2="536" y2="32"/><line x1="536" y1="18" x2="520" y2="32"/><line x1="520" y1="60" x2="536" y2="74"/><line x1="536" y1="60" x2="520" y2="74"/><line x1="520" y1="102" x2="536" y2="116"/><line x1="536" y1="102" x2="520" y2="116"/></g>
-      <g><rect x="560" y="150" width="178" height="46" rx="9" fill="#fff" stroke="#157f78" stroke-width="2"/><text x="578" y="172" fill="#121217">data-only path</text><text x="578" y="188" fill="#8a90a0" font-size="12">no code runs</text></g>
-      <g><rect x="770" y="150" width="174" height="46" rx="9" fill="#fff" stroke="#157f78" stroke-width="2.4"/><text x="788" y="178" fill="#157f78" font-weight="600">the effect</text></g>
+      <g stroke="#c7cad2" stroke-width="2.2" stroke-dasharray="6 5"><line x1="508" y1="121" x2="606" y2="25"/><line x1="508" y1="121" x2="606" y2="67"/><line x1="508" y1="121" x2="606" y2="109"/></g>
+      <g stroke="#E1323C" stroke-width="2.6"><path d="M571,51 l12,12 m0,-12 l-12,12"/><path d="M571,79 l12,12 m0,-12 l-12,12"/><path d="M571,105 l12,12 m0,-12 l-12,12"/></g>
+      <g><rect x="610" y="150" width="178" height="46" rx="9" fill="#fff" stroke="#157f78" stroke-width="2"/><text x="628" y="172" fill="#121217">data-only path</text><text x="628" y="188" fill="#8a90a0" font-size="12">no code runs</text></g>
+      <g><rect x="820" y="150" width="130" height="46" rx="9" fill="#fff" stroke="#157f78" stroke-width="2.4"/><text x="838" y="178" fill="#157f78" font-weight="600">the effect</text></g>
       <line x1="164" y1="121" x2="192" y2="121" stroke="#157f78" stroke-width="2.5" marker-end="url(#m3-t)"/>
       <line x1="326" y1="121" x2="354" y2="121" stroke="#157f78" stroke-width="2.5" marker-end="url(#m3-t)"/>
-      <line x1="508" y1="110" x2="556" y2="67" stroke="#c7cad2" stroke-width="2.2" stroke-dasharray="6 5"/>
-      <line x1="470" y1="144" x2="610" y2="148" stroke="#157f78" stroke-width="2.5" marker-end="url(#m3-t)"/>
-      <line x1="738" y1="173" x2="768" y2="173" stroke="#157f78" stroke-width="2.5" marker-end="url(#m3-t)"/>
-      <text x="300" y="242" text-anchor="middle" fill="#6b7280" font-size="12">three obvious routes blocked → one data-only reroute still wins</text>
+      <path d="M508,121 C560,121 560,173 604,173" fill="none" stroke="#157f78" stroke-width="2.5" marker-end="url(#m3-t)"/>
+      <line x1="788" y1="173" x2="816" y2="173" stroke="#157f78" stroke-width="2.5" marker-end="url(#m3-t)"/>
     </svg>
     <div style="text-align:center">
       <img class="shot" src="assets/image/src-anamnesis.png" alt="Sean Heelan's Anamnesis writeup on LLM agents generating a QuickJS exploit that survives RELRO, CFI, a shadow stack and a seccomp sandbox via a data-only path"
@@ -976,7 +979,6 @@
     <div class="legend"><span class="lf">frontier</span><span class="lt">trying</span><span class="lp">proven</span><span class="lr">refuted</span><span class="lc">candidate</span></div>
   </div>
   <span class="fragment" data-gstep="1" aria-hidden="true"></span><span class="fragment" data-gstep="2" aria-hidden="true"></span><span class="fragment" data-gstep="3" aria-hidden="true"></span><span class="fragment" data-gstep="4" aria-hidden="true"></span><span class="fragment" data-gstep="5" aria-hidden="true"></span><span class="fragment" data-gstep="6" aria-hidden="true"></span>
-  <p class="src">Anonymized recreation of a real run: a preauth guest-portal command injection (<code>io.popen</code>), code execution as root.</p>
 </section>
 
 <!-- ACT III DIVIDER -->
@@ -1089,16 +1091,16 @@
   <div id="capwrap">
     <svg id="evgraph" class="capsvg" viewBox="0 0 1030 340" role="img" aria-label="Capability graph walk from BLE to the charging contactor across four chips">
       <path id="e-ble-auth" class="edge" d="M168 95 L257 95"/>
-      <path id="e-usb-gd32" class="edge" d="M168 223 L487 133"/>
-      <path id="e-auth-gd32" class="edge" d="M403 95 L487 133"/>
-      <path id="e-gd32-stm32" class="edge" d="M633 133 L712 133"/>
+      <path id="e-usb-gd32" class="edge" d="M168 223 L477 133"/>
+      <path id="e-auth-gd32" class="edge" d="M403 95 L477 133"/>
+      <path id="e-gd32-stm32" class="edge" d="M653 133 L712 133"/>
       <path id="e-stm32-contactor" class="edge" d="M858 133 L876 133"/>
-      <path id="e-gd32-contactor" class="edge" d="M633 140 Q760 250 876 150"/>
+      <path id="e-gd32-contactor" class="edge" d="M653 140 Q770 250 876 150"/>
       <g id="n-ble" class="node v-proven"><rect class="box" x="22" y="72" width="146" height="46"/><circle class="dot" cx="40" cy="95" r="5"/><text x="54" y="93">BLE radio</text><text class="tag" x="54" y="109">pairing exposed</text></g>
       <g id="n-usb" class="node v-candidate"><rect class="box" x="22" y="200" width="146" height="46"/><circle class="dot" cx="40" cy="223" r="5"/><text x="54" y="221">USB OTA</text><text class="tag" x="54" y="237">needs enclosure</text></g>
       <g id="n-ocpp" class="node v-dead"><rect class="box" x="22" y="250" width="146" height="46"/><circle class="dot" cx="40" cy="273" r="5"/><text x="54" y="271">cloud OCPP</text><text class="tag" x="54" y="287">reachable · no path</text></g>
       <g id="n-auth" class="node v-candidate"><rect class="box" x="257" y="72" width="146" height="46"/><circle class="dot" cx="275" cy="95" r="5"/><text x="289" y="93">BLE auth bypass</text><text class="tag" x="289" y="109">CVE-2024-23958</text></g>
-      <g id="n-gd32" class="node v-candidate"><rect class="box" x="487" y="110" width="146" height="46"/><circle class="dot" cx="505" cy="133" r="5"/><text x="519" y="131">main-board RCE</text><text class="tag" x="519" y="147">GD32 · CVE-23959</text></g>
+      <g id="n-gd32" class="node v-candidate"><rect class="box" x="477" y="110" width="176" height="46"/><circle class="dot" cx="495" cy="133" r="5"/><text x="509" y="131">main-board RCE</text><text class="tag" x="509" y="147">GD32 · CVE-2024-23959</text></g>
       <g id="n-stm32" class="node v-candidate"><rect class="box" x="712" y="110" width="146" height="46"/><circle class="dot" cx="730" cy="133" r="5"/><text x="744" y="131">power MCU</text><text class="tag" x="744" y="147">STM32</text></g>
       <g id="n-contactor" class="node v-candidate"><rect class="box" x="876" y="110" width="146" height="46"/><circle class="dot" cx="894" cy="133" r="5"/><text x="908" y="131">contactor</text><text class="tag" x="908" y="147">charging ON</text></g>
       <text x="22" y="320" font-family="Fira Code,monospace" font-size="12" fill="#8a90a0">radio  →  controller  →  power MCU  →  physical</text>
@@ -1277,7 +1279,7 @@
       base: {
         nodes: { ble: 'proven', ocpp: 'dead', usb: 'candidate', auth: 'candidate', gd32: 'candidate', stm32: 'candidate', contactor: 'candidate' },
         edges: { 'ble-auth': 'candidate', 'usb-gd32': 'candidate', 'auth-gd32': 'candidate', 'gd32-stm32': 'candidate', 'stm32-contactor': 'candidate', 'gd32-contactor': 'candidate' },
-        caption: 'Four chips, one board. The goal is <b>physical</b>: close the charging contactor. Every hop crosses a chip boundary.'
+        caption: 'Four boards inside. The goal is <b>physical</b>: close the charging contactor.'
       },
       steps: [
         {},
