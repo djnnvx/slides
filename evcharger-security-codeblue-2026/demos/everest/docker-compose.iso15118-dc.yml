@@ -1,0 +1,44 @@
+
+networks:
+  default:
+    name: everest-demo-iso15118
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 2001:db8:5::/64
+          gateway: 2001:db8:5::1
+
+services:
+  mqtt-server:
+    image: ghcr.io/everest/everest-demo/mqtt-server:${TAG}
+    logging:
+      driver: none
+    ports:
+      - 1883:1883
+
+  manager:
+    image: ghcr.io/everest/everest-demo/manager:${TAG}
+    deploy:
+      resources:
+        limits:
+          cpus: "${EVEREST_MANAGER_CPUS}"
+          memory: "${EVEREST_MANAGER_MEMORY}"
+    depends_on:
+      - mqtt-server
+    environment:
+      - MQTT_SERVER_ADDRESS=mqtt-server
+    entrypoint: "tail -f /dev/null"
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+
+  node-red:
+    image: ghcr.io/everest/everest-demo/nodered:${TAG}
+    depends_on:
+      - mqtt-server
+    environment:
+      - MQTT_SERVER_ADDRESS=mqtt-server
+      - FLOWS=/config/config-sil-dc-flow.json
+    ports:
+      - 1880:1880
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0

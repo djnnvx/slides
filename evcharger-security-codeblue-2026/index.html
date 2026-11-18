@@ -260,6 +260,14 @@ h2.sh::before{ content:"$ "; color:var(--red); }
 
 <!-- 2b. WARNING -->
 <section class="stmt" data-background-color="#041D58">
+  <p style="margin:0">Slides, demos &amp; sources</p>
+  <p style="font-family:monospace; font-size:.95em; color:var(--red); max-width:none; margin:.4em 0 0">github.com/djnnvx/slides</p>
+  <p style="font-size:.6em; color:#dfe3ec; max-width:none; margin:.2em 0 0">evcharger-security-codeblue-2026/</p>
+  <img class="shot" src="assets/image/src-repo.png" alt="github.com/djnnvx/slides" style="width:auto;max-height:36vh;margin:.8em auto 0"
+    onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'card',innerHTML:'<div class=ct>github.com/djnnvx/slides</div>'}))">
+</section>
+
+<section class="stmt" data-background-color="#041D58">
   <p style="font-size:1.7em; color:var(--red); font-weight:700">Hack responsibly !</p>
   <ul style="text-align:left; max-width:23em; margin:.8em auto 0; color:#dfe3ec; font-size:.82em; line-height:1.55">
     <li style="margin:.45em 0">Only touch the signal layer. If you don't know what it is, don't touch it: DC fast-charging can be <b style="color:var(--red)">LETHAL</b>.</li>
@@ -449,7 +457,7 @@ h2.sh::before{ content:"$ "; color:var(--red); }
     <text class="tag" x="300" y="130">pulse width (duty %) = current limit</text>
     <!-- callouts -->
     <text class="tag hot" x="180" y="366" style="font-size:14px">5% duty &#8594; hands off to power-line comms</text>
-    <text class="tag" x="520" y="366" style="font-size:14px">90% duty &#8594; error</text>
+    <text class="tag" x="520" y="366" style="font-size:14px">&lt;3% or &gt;97% duty &#8594; invalid, stop</text>
     <defs>
       <marker id="dL" markerWidth="9" markerHeight="9" refX="1" refY="4" orient="auto"><path d="M8 0 L0 4 L8 8 z" fill="var(--grey)"/></marker>
       <marker id="dR" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--grey)"/></marker>
@@ -520,6 +528,13 @@ NMK(<span class="st">"HomePlugAV"</span>) =
   </div>
 </section>
 
+<!-- DEMO: demo-nmk.mp4 -->
+<section>
+  <h2 class="sh">python3 nmk.py</h2>
+  <video class="shot" data-autoplay muted playsinline controls src="assets/video/demo-nmk.mp4" style="width:auto;max-height:60vh;margin:.3em auto 0"></video>
+  <p class="src" style="text-align:center">NMK("HomePlugAV"): public derivation, default password.</p>
+</section>
+
 <!-- 9. BROKENWIRE -->
 <section>
   <h2 class="sh">brokenwire</h2>
@@ -549,7 +564,9 @@ NMK(<span class="st">"HomePlugAV"</span>) =
       <p class="imgcap">Sébastien Dudek (Penthertz). SSTIC 2019.</p>
     </div>
     <div>
-      <div class="codecard" style="font-size:.5em">$ v2ginjector -i eth0 <span class="kw">--sniff-slac</span>
+      <div class="codecard" style="font-size:.5em">$ python V2GInjector
+<span class="cm">&gt;&gt;&gt;</span> Network().<span class="kw">sniff</span>(iface="eth0")
+<span class="cm"># output below is illustrative</span>
 <span class="cm">[*]</span> HomePlug Green PHY on eth0
 <span class="cm">[+]</span> CM_SLAC_PARM.REQ    RunID=3f1a8c
 <span class="cm">[+]</span> CM_MNBC_SOUND.IND   x10
@@ -655,6 +672,13 @@ NMK(<span class="st">"HomePlugAV"</span>) =
   </svg>
 </section>
 
+<!-- DEMO: demo-everest.mp4 -->
+<section>
+  <h2 class="sh">everest/run.sh</h2>
+  <video class="shot" data-autoplay muted playsinline controls src="assets/video/demo-everest.mp4" style="width:auto;max-height:60vh;margin:.3em auto 0"></video>
+  <p class="src" style="text-align:center">EVerest SIL, default config: TLS server up, car asks NO-TLS, charger agrees.</p>
+</section>
+
 <!-- 15. PNC PKI -->
 <section>
   <h2 class="sh">openssl x509</h2>
@@ -701,7 +725,7 @@ NMK(<span class="st">"HomePlugAV"</span>) =
           <tr><td class="p">Luxgen n7</td><td class="no">discharged</td></tr>
           <tr><td class="p">Hyundai IONIQ 6</td><td class="no">discharged</td></tr>
           <tr><td class="p">CMC</td><td class="no">discharged</td></tr>
-          <tr><td class="p">Tesla Model Y</td><td class="yes">resisted*</td></tr>
+          <tr><td class="p">Tesla Model Y</td><td class="yes">resisted</td></tr>
         </tbody>
       </table>
       <p class="src">HotWire. NTUST + Virginia Tech. USENIX WOOT 2026.</p>
@@ -762,7 +786,7 @@ NMK(<span class="st">"HomePlugAV"</span>) =
       <table class="ptable">
         <thead><tr><th>Security Profile</th><th>Transport</th><th>Auth</th></tr></thead>
         <tbody>
-          <tr><td class="p">0</td><td class="no">ws:// plaintext</td><td class="no">none</td></tr>
+          <tr><td class="p">none</td><td class="no">ws:// plaintext</td><td class="no">none</td></tr>
           <tr><td class="p">1</td><td class="no">ws://</td><td>HTTP Basic</td></tr>
           <tr><td class="p">2</td><td>wss:// TLS</td><td>Basic</td></tr>
           <tr><td class="p">3</td><td class="yes">wss:// TLS</td><td class="yes">client cert</td></tr>
@@ -778,7 +802,7 @@ NMK(<span class="st">"HomePlugAV"</span>) =
   <div class="cols">
     <div>
       <svg class="dg" viewBox="0 0 460 220">
-        <rect class="box" x="10" y="80" width="130" height="64" rx="8"/><text class="tag" x="75" y="108" text-anchor="middle">Charge point</text><text class="tag" x="75" y="126" text-anchor="middle">Profile 0</text>
+        <rect class="box" x="10" y="80" width="130" height="64" rx="8"/><text class="tag" x="75" y="108" text-anchor="middle">Charge point</text><text class="tag" x="75" y="126" text-anchor="middle">ws:// no TLS</text>
         <rect class="box hot" x="330" y="80" width="120" height="64" rx="8"/><text class="tag hot" x="390" y="108" text-anchor="middle">Rogue</text><text class="tag hot" x="390" y="126" text-anchor="middle">CSMS</text>
         <path class="edge hot dash" d="M140 112 H330" marker-end="url(#arh6)"/>
         <text class="ptxt hot" x="235" y="100" text-anchor="middle">DNS / DHCP redirect</text>
@@ -792,7 +816,7 @@ NMK(<span class="st">"HomePlugAV"</span>) =
       </div>
     </div>
     <div>
-      <div class="codecard" style="font-size:.5em">$ python -m ocpp.csms --listen <span class="st">ws://0.0.0.0:9000</span>
+      <div class="codecard" style="font-size:.5em">$ python rogue_csms.py  <span class="cm"># ~30 lines on mobilityhouse/ocpp</span>
 <span class="cm">[*]</span> OCPP 1.6-J, waiting
 <span class="ok">[+]</span> CP_0142 connected   <span class="cm"># redirected unit</span>
 <span class="cm">&gt;</span> BootNotification
@@ -803,6 +827,13 @@ NMK(<span class="st">"HomePlugAV"</span>) =
 <span class="cm">&lt;</span> <span class="no">accepted</span></div>
     </div>
   </div>
+</section>
+
+<!-- DEMO: demo-ocpp.mp4 -->
+<section>
+  <h2 class="sh">ocpp/run.sh</h2>
+  <video class="shot" data-autoplay muted playsinline controls src="assets/video/demo-ocpp.mp4" style="width:auto;max-height:60vh;margin:.3em auto 0"></video>
+  <p class="src" style="text-align:center">Simulated charger, no security profile, local CSMS. One UpdateFirmware call.</p>
 </section>
 
 <!-- 20. OCPI -->
@@ -900,8 +931,9 @@ POST /api/login
     </div>
     <div>
       <p class="small"><b>CVE-2025-6566</b>: oatpp's JSON deserializer has no recursion depth limit (<code>Deserializer.cpp</code>). A deeply nested body blows the stack.</p>
+      <p class="src">Found in a production charger's web stack. Vendor under NDA.</p>
       <div class="hops" style="margin-top:.8em">
-        <div class="chip">Crow WS upgrade<span class="cve">GHSA-6mch · mTLS bypass</span></div>
+        <div class="chip">Crow WS upgrade<span class="cve">GHSA-6mch · WS upgrade skips auth middleware</span></div>
       </div>
     </div>
   </div>
@@ -931,7 +963,7 @@ POST /api/login
     <div><img class="shot" src="assets/image/src-cisa-evlink.png" style="max-height:34vh" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'card',innerHTML:'<div class=ct>ICSA-25-175-04</div><div class=cd>Schneider EVLink</div>'}))"></div>
     <div><img class="shot" src="assets/image/src-zdi-chargepoint.png" style="max-height:34vh" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'card',innerHTML:'<div class=ct>ZDI</div><div class=cd>ChargePoint Home Flex</div>'}))"></div>
   </div>
-  <p class="src" style="text-align:center;margin-top:1em">Nobody audits what the car believes. CISA · ZDI.</p>
+  <p class="src" style="text-align:center;margin-top:1em">It's just a Linux box. CISA · ZDI.</p>
 </section>
 
 <!-- DIVIDER V -->

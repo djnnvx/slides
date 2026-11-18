@@ -1,0 +1,8 @@
+[project]
+name = "ocpp-demo"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "ocpp>=2.1.0",
+    "websockets>=17.4",
+]
